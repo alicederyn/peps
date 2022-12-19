@@ -76,7 +76,7 @@ Attempting to pass a ``MovieRecord`` into ``movie_string`` results (using mypy) 
 
     Argument 1 to "movie_string" has incompatible type "MovieRecord"; expected "Movie"
 
-This particular case case should be type-safe, but the type checker correctly stops the
+This particular use case should be type-safe, but the type checker correctly stops the
 user from passing a ``MovieRecord`` into a ``Movie`` argument in the general case because
 the ``Movie`` class has mutator methods that could potentially allow the function to break
 the type constraints in ``MovieRecord`` by setting ``movie["year"] = None`` or ``del movie["year"]``.
