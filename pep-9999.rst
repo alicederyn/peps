@@ -142,7 +142,7 @@ For example::
     movie["year"] = 1985  # Fine, mutator methods added in definition
     movie["name"] = "Terminator"  # Type check error, "name" mutator not declared
 
-Inheriting, directly or indirectly, from both TypedDict and Protocol will fail at runtime.
+Inheriting, directly or indirectly, from both TypedDict and Protocol will continue to fail at runtime, and should continue to be rejected by type checkers.
 
 
 Multiple inheritance and Protocol
