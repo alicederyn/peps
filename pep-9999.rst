@@ -110,7 +110,7 @@ The ``TypedMapping`` type is a protocol behaving almost identically to ``TypedDi
 
 1. The runtime type of a TypedMapping object is not constrained to be a ``dict``
 2. no mutator methods (``__setitem__``, ``__delitem__``, ``update``, etc.) will be generated
-3. if a class includes a ``TypedMapping`` protocol in its MRO, it does not become a ``TypedMapping`` protocol itself
+3. a class definition defines a ``TypedMapping`` protocol if and only if ``TypedMapping`` appears directly in its class bases
 4. subclasses can narrow field types, in the same manner as other protocols
 
 All current and future features of TypedDict are applicable to TypedMapping, including class-based and alternative syntax, totality, and ``Required`` and ``NotRequired`` from :pep:`655`.
