@@ -121,7 +121,7 @@ As with :pep:`589`, this PEP provides a sketch of how a type checker is expected
 Multiple inheritance and TypedDict
 ----------------------------------
 
-A type that inherits from a TypedMapping type and from TypedDict (either directly or indirectly):
+A type that inherits from a TypedMapping protocol and from TypedDict (either directly or indirectly):
 
 5. is the structural intersection of its parents, or invalid if no such intersection exists
 6. instances must be a dict subclass
@@ -148,15 +148,15 @@ Inheriting, directly or indirectly, from both TypedDict and Protocol will fail a
 Multiple inheritance and Protocol
 ---------------------------------
 
-* A type that inherits from a TypedMapping type and from a Protocol type must satisfy the protocols defined by both, but is not itself a protocol unless it inherits directly from TypedMapping or Protocol.
-* A type that inherits from a TypedMapping type and from Protocol itself is configured as a Protocol. Methods and properties may be defined; keys may not::
+* A type that inherits from a TypedMapping protocol and from a Protocol protocol must satisfy the protocols defined by both, but is not itself a protocol unless it inherits directly from TypedMapping or Protocol.
+* A type that inherits from a TypedMapping protocol and from Protocol itself is configured as a Protocol. Methods and properties may be defined; keys may not::
 
     class A(Movie, Protocol):
         # Declare a mutable property called 'year'
         # This does not affect the dictionary key 'year'
         year: str
 
-* A type that inherits from a Protocol type and from TypedMapping itself is configured as a TypedMapping. Keys may be defined; methods and properties may not::
+* A type that inherits from a Protocol protocol and from TypedMapping itself is configured as a TypedMapping. Keys may be defined; methods and properties may not::
 
     class B(A, TypedMapping):
         # Declare a key 'year'
