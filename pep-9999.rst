@@ -100,7 +100,7 @@ The problem disappears if we don't have mutator methods in ``Movie``. This could
 This is very repetitive, easy to get wrong, and is still missing important method definitions like ``__contains__()`` and ``keys()``.
 
 The proposed ``TypedMapping`` type allows a straightforward way of defining these types that should be familiar to existing users of ``TypedDict`` and support the cases exemplified above.
-In addition to those benefits, by flagging arguments of a function as ``TypedMapping`` makes explicit not just to typecheckers but also to user that the function is not going to modify its argument, which is usually a desirable property of a function interface.
+In addition to those benefits, by flagging arguments of a function as ``TypedMapping``, it makes explicit not just to typecheckers but also to users that the function is not going to modify its inputs, which is usually a desirable property of a function interface.
 Finally, this allows bringing the benefits of ``TypedDict`` to other mapping types that are unrelated to ``dict``.
 
 Specification
