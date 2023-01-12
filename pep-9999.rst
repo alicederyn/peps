@@ -108,7 +108,7 @@ Specification
 
 The ``TypedMapping`` type is a protocol behaving almost identically to ``TypedDict``, except:
 
-1. Its instances need not be instances of subclasses of ``dict``
+1. The runtime type of a TypedMapping object is not constrained to be a ``dict``
 2. no mutator methods (``__setitem__``, ``__delitem__``, ``update``, etc.) will be generated
 3. subclasses can narrow field types, in the same manner as other protocols
 
