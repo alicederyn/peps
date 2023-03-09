@@ -256,6 +256,17 @@ both ``TypedDict`` and ``TypedMapping`` will need to use
 of ``TypedDict`` does an ``is`` check on the metaclass of all base classes.
 
 
+How to Teach This
+=================
+
+This PEP should be linked in the ``typing`` module's documentation.
+Class documentation should also be added, using that for
+:class:`~collections.abc.Mapping`, :class:`~typing.Protocol` and
+:class:`~typing.TypedDict` as examples.
+
+Suggested introductory sentence: "Base class for read-only mapping protocol classes."
+
+
 Reference Implementation
 ========================
 
