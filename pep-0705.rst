@@ -262,12 +262,12 @@ There are no known security consequences arising from this PEP.
 How to Teach This
 =================
 
-This PEP should be linked in the :mod:`typing` module's documentation.
-Class documentation should also be added, using that for
-:class:`~collections.abc.Mapping`, :class:`~typing.Protocol` and
-:class:`~typing.TypedDict` as examples.
+Class documentation should be added to the :mod:`typing` module's documentation, using
+that for :class:`~collections.abc.Mapping`, :class:`~typing.Protocol` and
+:class:`~typing.TypedDict` as examples. Suggested introductory sentence: "Base class
+for read-only mapping protocol classes."
 
-Suggested introductory sentence: "Base class for read-only mapping protocol classes."
+This PEP can be added to the others listed in the :mod:`typing` module's documentation.
 
 
 Reference Implementation
