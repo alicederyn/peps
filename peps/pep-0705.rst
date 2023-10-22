@@ -313,7 +313,7 @@ Discussion:
 Merge operation
 ---------------
 
-The merge operation (``d1 | d2``) creates a new dictionary with the merged keys and values of its two operands. As such, the result should be consistent with any type that can hold the possible items. For example::
+The merge operation (``d1 | d2``) creates a new dictionary with the merged keys and values of its two operands. As such, the result is theoretically consistent with any type that can hold the possible items. For example::
 
     class A(TypedDict):
         x: ReadOnly[int]
@@ -325,10 +325,11 @@ The merge operation (``d1 | d2``) creates a new dictionary with the merged keys 
         x: int | str
 
     def union_a_b(a: A, b: B) -> C:
-        # Accepted by type-checker, even though A, B and C are mutually inconsistent
+        # Sound, even though A, B and C are mutually inconsistent
         return a | b
 
-Type checkers should conform to the following rules, even if they are not expressed correctly in the typeshed due to language constraints.
+Soundness
+^^^^^^^^^
 
 If the merger of two TypedDict objects of type ``A`` and ``B`` is assigned to a TypedDict of type ``C``, the type checker should verify that:
 
@@ -346,6 +347,7 @@ Notes:
 
 * The read-only status of the items does not matter. An item can be read-only on just ``A``, just ``B``, or just ``C``, or any combination.
 * A key found on ``A`` or ``B`` may theoretically be missed off ``C``. Type-checkers or other linters may however choose to flag this edge-case with a warning or error, if it is found to be a source of mistakes.
+* A type checker may choose to allow unsound code, such as keys in ``A`` being absent in ``B``, if this is idiomatic and a source of false positive errors.
 * An item in ``A`` can be inconsistent with ``C`` if it is required in ``B``. For example::
 
     class A(TypedDict):
@@ -362,6 +364,35 @@ Notes:
     a: A = { "x": "three", "y": 4 }
     b: B = { "x": 3 }
     c: C = a | b  # Accepted by type checker: "x" will always come from b
+
+Minimum support
+^^^^^^^^^^^^^^^
+
+A type checker may reject sound assignments, for instance if it is unable to support bidirectional type inference. This section provides a minimum standard of support that a type checker should provide, so users can write code that will be consistently accepted across all type checkers.
+
+Type checkers may reject any code not conforming to this model, but the error should be explicit that this is a type checker limitation, and that the user code is not necessarily unsound. It may be reasonable to use a distinct code for suppressing such issues, so if the checker later supports full inference and the code is indeed unsound, the issue will no longer be suppressed.
+
+A type checker should always permit ``a | b`` if the following holds:
+
+* Every key in ``A`` is also in ``B``
+* Every non-required key in ``B`` is also in ``A``.
+
+A type checker may treat ``a | b`` as returning a fixed TypedDict ``F`` constructed by the following rules:
+
+* The key set of ``F`` is the union of the key sets of ``A`` and ``B``
+* All items of ``F`` are non-read-only
+* A key in ``F`` is required if and only if it is required in either ``A`` or ``B``
+* If a key is required in ``B``, its value type in ``F`` is the same as in ``B``
+* If a key is not required in ``B``, its value type in ``F`` is the union of the associated value types in ``A`` and ``B``
+
+All type checkers should accept code that would be accepted if these rules were followed, even if the type checker does not internally construct such a type.
+
+Notes:
+
+* For any TypedDict ``D`` with non-read-only items, the type constructed when merging two instances of type ``D`` will be equivalent to ``D``, and the type checker may reuse ``D`` internally.
+* For any TypedDict ``D`` with read-only items, the type constructed when merging two instances of type ``D`` will be a copy of ``D`` with all read-only restrictions removed.
+* For any TypedDict ``D``, the result of merging two instances of ``D`` will always be consistent with ``D``.
+
 
 Update method
 -------------
@@ -399,7 +430,8 @@ As with the merge operation, the result of applying the ``copy`` method, ``copy.
     a: A = { "x": 3 }
     b: B = copy(a)  # Accepted by type checker: items are compatible
 
-Type checkers should conform to the following rules, even if they are not expressed correctly in the typeshed due to language constraints.
+Soundness
+^^^^^^^^^
 
 If a shallow copy of TypedDict type ``A`` is assigned to TypedDict type ``B``, the type checker should verify that:
 
@@ -423,7 +455,7 @@ Notes:
 
 * The read-only status of the items does not matter. An item can be read-only on just ``A`` or just ``B``.
 * A key found on ``A`` may theoretically be missed off ``B``. Type-checkers or other linters may however choose to flag this edge-case with a warning or error, if it is found to be a source of mistakes.
-* Type checkers should support a deep copy of a recursive structural type to a different recursive structural type. For instance::
+* A deep copy of a recursive structural type may be assigned to a different recursive structural type. For instance::
 
     class A(TypedDict):
       v: int | str
@@ -451,7 +483,35 @@ Notes:
     d: D = { "v": 1, "x": { "v": 1.1 } }
     a: A = deepcopy(d)  # Type check error: "v" is of type float in E
 
-* Type checkers may choose to reject deep copying between complex recursive types for algorithmic complexity reasons. However, the error should be explicit that this is a type checker limitation, and not due to an unsound assignment in the user code.
+* Type checkers may choose to reject deep copying between complex recursive types for algorithmic complexity reasons. However, the error should be explicit that this is a type checker limitation, and the user code is not necessarily unsound.
+
+Minimum support
+^^^^^^^^^^^^^^^
+
+A type checker may reject sound assignments, for instance if it is unable to support bidirectional type inference. This section provides a minimum standard of support that a type checker should provide, so users can write code that will be consistently accepted across all type checkers.
+
+Type checkers may reject any code not conforming to this model, but the error should be explicit that this is a type checker limitation, and that the user code is not necessarily unsound. It may be reasonable to use a distinct code for suppressing such issues, so if the checker later supports full inference and the code is indeed unsound, the issue will no longer be suppressed.
+
+A type checker may treat a shallow copy of a TypedDict ``A`` as returning a fixed TypedDict ``F`` that has the same items as ``A``, but with any read-only constraints removed.
+
+A type checker may treat a deep copy of a TypedDict ``A`` as returning a fixed TypedDict ``F`` constructed by the following rules:
+
+* The key set of ``F`` is the same as the key set of ``A``
+* All items in ``F`` are non-read-only
+* Keys in ``F`` are required if and only if they are required in ``A``
+* Value types are constructed based on the associated value type ``V`` in ``A`` according to the following rules:
+
+  * If ``V`` has already been seen, use the same associated type; in particular, recursive types should map to recursive types
+  * If ``V`` is a TypedDict and the item in ``A`` is read-only, apply these rules recursively
+  * Otherwise, use ``V``
+
+All type checkers should accept code that would be accepted if these rules were followed, even if the type checker does not internally construct such a type. However, if due to other limitations, a type checker would not consider ``F`` consistent with ``A`` (for instance due to incomplete support for recursive types), it should prioritize consistency.
+
+Notes:
+
+* For any TypedDict ``D`` with non-read-only items, the type constructed when creating a shallow or deep copy of ``D`` will be equivalent to ``D``, and the type checker may reuse ``D`` internally.
+* For any TypedDict ``D`` with read-only items, the type constructed when creating a shallow copy of ``D`` will be a copy of ``D`` with all read-only restrictions removed.
+* The type constructed from a shallow or deep copy of a type ``T`` will always be consistent with ``T``.
 
 
 Keyword argument typing
@@ -623,6 +683,15 @@ However, during the process of drafting, the situation changed:
 * a `draft of PEP-728 <https://github.com/python/peps/pull/3441>`_ was created that is a superset of the ``other_keys`` functionality
 
 As such, there is less urgency to address this issue in this PEP, and it has been deferred to PEP-728.
+
+
+Open questions
+==============
+
+Requiring bidirectional type inference
+--------------------------------------
+
+A previous draft of this PEP mandated soundness checks and consistency support that would have required all type checkers implement bidirectional type inference. The current draft has loosened this, but this means conformant type checkers are permitted to reject sound, idiomatic Python. We would appreciate feedback on whether it would be reasonable to restore the previous, stronger requirements.
 
 
 Copyright
